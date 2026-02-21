@@ -9,6 +9,12 @@ const isBrowserSupported =
   !!navigator.mediaDevices &&
   typeof navigator.mediaDevices.getDisplayMedia === 'function';
 
+/* Detect Chromium-based browsers (Chrome / Edge) — they provide full metadata */
+const isChromiumBased =
+  typeof navigator !== 'undefined' &&
+  /Chrome\//.test(navigator.userAgent) &&
+  !/Chromium\//.test(navigator.userAgent);
+
 const FEATURES = [
   { icon: '🔐', label: 'Permission handling' },
   { icon: '📺', label: 'Live preview' },
@@ -86,6 +92,21 @@ const Home = () => {
               <UnsupportedBrowser />
             ) : (
               <>
+                {/* Partial-support notice for non-Chrome/Edge browsers */}
+                {!isChromiumBased && (
+                  <div className="partial-support-banner" role="note" aria-live="polite">
+                    <span className="partial-support-icon" aria-hidden="true">⚠️</span>
+                    <div className="partial-support-body">
+                      <strong className="partial-support-title">Limited Browser Support</strong>
+                      <p className="partial-support-msg">
+                        Your browser supports screen sharing, but stream metadata
+                        (e.g. Display Type) may show as <em>Unknown</em>. For the
+                        full experience, use <strong>Chrome</strong> or <strong>Edge</strong>.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <Button
                   size="large"
                   onClick={handleStartTest}

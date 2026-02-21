@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useScreenShare from '../hooks/useScreenShare';
 import Button from '../components/Button';
@@ -72,6 +72,13 @@ function getStepIndex(status) {
   return 2; // cancelled | denied | ended | error
 }
 
+/** Format elapsed seconds as MM:SS */
+function formatDuration(seconds) {
+  const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const s = String(seconds % 60).padStart(2, '0');
+  return `${m}:${s}`;
+}
+
 /* ─────────────────────────────────────────────────────────────────── */
 /* ScreenTest — /screen-test                                            */
 /* ─────────────────────────────────────────────────────────────────── */
@@ -86,6 +93,10 @@ const ScreenTest = () => {
    */
   const videoRef = useRef(null);
 
+  // Feature: clipboard copy confirmation
+  const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef(null);
+
   const {
     stream,
     status,
@@ -93,6 +104,8 @@ const ScreenTest = () => {
     displayType,
     resolution,
     frameRate,
+    elapsedSeconds,
+    trackReadyState,
     startScreenShare,
     cleanup,
   } = useScreenShare();
@@ -117,8 +130,40 @@ const ScreenTest = () => {
   useEffect(() => {
     return () => {
       cleanup();
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
     };
   }, [cleanup]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+  /* ── Keyboard shortcuts ─────────────────────────────────────────── */
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      // Don't fire if user is typing in an input
+      if (e.target !== document.body) return;
+
+      if (e.key === 's' || e.key === 'S') {
+        if (status === 'idle') {
+          startScreenShare();
+        } else if (status === 'cancelled' || status === 'ended' || status === 'error') {
+          cleanup();
+          queueMicrotask(() => startScreenShare());
+        }
+      }
+
+      if (e.key === 'Escape') {
+        if (status === 'granted') {
+          cleanup('ended');
+        } else if (status !== 'requesting') {
+          cleanup();
+          navigate('/');
+        }
+      }
+
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [status, startScreenShare, cleanup, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── Handlers ───────────────────────────────────────────────────── */
 
@@ -148,6 +193,27 @@ const ScreenTest = () => {
     cleanup();
     navigate('/');
   };
+
+
+  /** Copy stream metadata to clipboard */
+  const handleCopyInfo = useCallback(() => {
+    const text = [
+      `Screen Share Session — ${new Date().toLocaleString()}`,
+      `─────────────────────────────`,
+      `Status:       Stream active`,
+      `Display Type: ${displayType ?? 'Unknown'}`,
+      `Resolution:   ${resolution.width > 0 ? `${resolution.width} × ${resolution.height} px` : 'Detecting…'}`,
+      `Frame Rate:   ${frameRate != null ? `${frameRate} fps` : '—'}`,
+      `Duration:     ${formatDuration(elapsedSeconds)}`,
+      `Track Health: ${trackReadyState ?? '—'}`,
+    ].join('\n');
+
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopied(true);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
+    });
+  }, [displayType, resolution, frameRate, elapsedSeconds, trackReadyState]);
 
   /* ── Derived ────────────────────────────────────────────────────── */
   const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.idle;
@@ -277,12 +343,33 @@ const ScreenTest = () => {
                   className="preview-video"
                   aria-label="Live screen share preview"
                 />
+                {/* Mirror warning — shown when sharing the current browser tab */}
+                {displayType === 'Browser Tab' && (
+                  <div className="mirror-warning" role="note">
+                    <span className="mirror-warning-icon" aria-hidden="true">🪞</span>
+                    <span>
+                      <strong>Hall-of-mirrors effect</strong> — you're sharing this tab.
+                      Share a <em>different tab, window, or screen</em> for a clean preview.
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* ── Stream metadata ─────────────────────────────────────── */}
             <div className="card metadata-card">
-              <div className="metadata-heading">Stream Metadata</div>
+              <div className="metadata-header">
+                <div className="metadata-heading">Stream Metadata</div>
+                {/* Feature: Copy to clipboard */}
+                <button
+                  className={`copy-btn${copied ? ' copy-btn--copied' : ''}`}
+                  onClick={handleCopyInfo}
+                  aria-label="Copy stream metadata to clipboard"
+                  title="Copy metadata to clipboard"
+                >
+                  {copied ? '✅ Copied!' : '📋 Copy Info'}
+                </button>
+              </div>
               <div className="metadata-grid">
 
                 {/* Status */}
@@ -321,6 +408,29 @@ const ScreenTest = () => {
                   tooltip="Actual captured frame rate. May vary depending on browser and content."
                 />
 
+                {/* Feature: Session Duration */}
+                <MetaTile
+                  label="Session Duration"
+                  value={
+                    <span className="duration-value">
+                      ⏱ {formatDuration(elapsedSeconds)}
+                    </span>
+                  }
+                  tooltip="Time elapsed since screen sharing started."
+                />
+
+                {/* Feature: Track Health */}
+                <MetaTile
+                  label="Track Health"
+                  value={
+                    trackReadyState === 'live'
+                      ? <span className="health-badge health-live">● live</span>
+                      : trackReadyState === 'ended'
+                        ? <span className="health-badge health-ended">● ended</span>
+                        : <span className="health-badge">—</span>
+                  }
+                  tooltip="Real-time readyState of the video MediaStreamTrack."
+                />
 
               </div>
             </div>
@@ -378,9 +488,20 @@ const ScreenTest = () => {
 
           </div>
 
+          {/* Keyboard shortcut hints */}
+          <div className="kbd-hints" aria-label="Keyboard shortcuts">
+            <span className="kbd-hint">
+              <kbd>S</kbd> Start / Retry
+            </span>
+            <span className="kbd-hint-sep" aria-hidden="true">·</span>
+            <span className="kbd-hint">
+              <kbd>Esc</kbd> Stop / Back
+            </span>
+          </div>
+
           {/* ── Footer note ─────────────────────────────────────────── */}
           <p className="footer-note" aria-label="Notes">
-            <span>Chrome or Edge required</span>
+            <span>Chrome or Edge recommended</span>
             <span className="footer-note-sep" aria-hidden="true">·</span>
             <span>Local preview only</span>
             <span className="footer-note-sep" aria-hidden="true">·</span>
@@ -388,7 +509,7 @@ const ScreenTest = () => {
           </p>
 
         </div>
-      </main>
+      </main >
     </>
   );
 };

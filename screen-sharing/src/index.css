@@ -748,6 +748,52 @@ body {
   object-fit: contain;
 }
 
+
+
+/* ── MIRROR WARNING BANNER ───────────────────────────────────── */
+/*
+ * Shown inside the video-wrapper when displayType === 'Browser Tab'.
+ * Warns the user about the hall-of-mirrors effect before they enter
+ * fullscreen, and tells them to share a different source.
+ */
+.mirror-warning {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(251, 191, 36, 0.12);
+  border-top: 1px solid rgba(251, 191, 36, 0.3);
+  backdrop-filter: blur(8px);
+  font-size: 0.76rem;
+  color: var(--text-2);
+  line-height: 1.5;
+  animation: fadeSlideUp 0.3s ease both;
+  z-index: 5;
+}
+
+.mirror-warning-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+.mirror-warning strong {
+  color: var(--yellow);
+  font-weight: 700;
+}
+
+.mirror-warning em {
+  color: var(--text);
+  font-style: normal;
+  font-weight: 600;
+}
+
+
+
 /* ── METADATA GRID ────────────────────────────────────────────── */
 .metadata-card {
   padding: var(--s5) var(--s6);
@@ -759,7 +805,6 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-3);
-  margin-bottom: var(--s4);
 }
 
 .metadata-grid {
@@ -847,6 +892,143 @@ body {
 .footer-note-sep {
   opacity: 0.3;
 }
+
+/* ── METADATA HEADER (heading + copy button row) ──────────────── */
+.metadata-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s4);
+}
+
+/* ── COPY BUTTON ──────────────────────────────────────────────── */
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-2);
+  background: var(--glass);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all var(--t-base);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.copy-btn:hover {
+  background: var(--glass-hover);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.copy-btn--copied {
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: var(--green);
+  cursor: default;
+  transform: none !important;
+}
+
+/* ── FULLSCREEN BUTTON ────────────────────────────────────────── */
+.fs-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-2);
+  background: var(--glass);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all var(--t-base);
+  white-space: nowrap;
+}
+
+.fs-btn:hover {
+  background: rgba(79, 142, 247, 0.1);
+  border-color: rgba(79, 142, 247, 0.4);
+  color: var(--blue);
+  transform: translateY(-1px);
+}
+
+/* ── TRACK HEALTH BADGE ───────────────────────────────────────── */
+.health-badge {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.health-live {
+  color: var(--green);
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+
+.health-ended {
+  color: var(--red);
+}
+
+/* ── SESSION DURATION VALUE ───────────────────────────────────── */
+.duration-value {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: 0.05em;
+}
+
+/* ── KEYBOARD SHORTCUT HINTS ──────────────────────────────────── */
+.kbd-hints {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  padding: var(--s2) 0;
+}
+
+.kbd-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+.kbd-hint-sep {
+  opacity: 0.25;
+  font-size: 0.75rem;
+  color: var(--text-3);
+}
+
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 4px;
+  border: 1px solid var(--border-2);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-2);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+  letter-spacing: 0;
+}
+
+
 
 /* ================================================================
    BUTTON COMPONENT
@@ -1027,6 +1209,61 @@ body {
   width: 48px;
   height: 48px;
   border-width: 3px;
+}
+
+/* ================================================================
+   PARTIAL SUPPORT BANNER (non-Chromium browsers)
+   ================================================================ */
+.partial-support-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  padding: var(--s4) var(--s5);
+  background: rgba(251, 191, 36, 0.07);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.1), 0 4px 16px rgba(0, 0, 0, 0.3);
+  animation: fadeSlideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  max-width: 480px;
+  width: 100%;
+  text-align: left;
+}
+
+.partial-support-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.partial-support-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.partial-support-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--yellow);
+  letter-spacing: 0.02em;
+}
+
+.partial-support-msg {
+  font-size: 0.8rem;
+  color: var(--text-2);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.partial-support-msg em {
+  color: var(--yellow);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.partial-support-msg strong {
+  color: var(--text);
 }
 
 /* ================================================================

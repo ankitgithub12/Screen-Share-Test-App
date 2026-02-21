@@ -21,9 +21,31 @@ const useScreenShare = () => {
   const [resolution, setResolution] = useState({ width: 0, height: 0 });
   const [frameRate, setFrameRate] = useState(null);
 
+  // Feature: live session duration counter (seconds since stream was granted)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // Feature: live track readyState poll ('live' | 'ended' | null)
+  const [trackReadyState, setTrackReadyState] = useState(null);
+
   // Ref holds the live stream so the onended closure always sees the
   // current stream without being re-created.
   const streamRef = useRef(null);
+
+  // Interval refs — kept as refs so they survive renders without being deps
+  const timerRef = useRef(null);
+  const healthRef = useRef(null);
+
+  /* ── startTimer / stopTimer ─────────────────────────────────── */
+  const stopIntervals = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (healthRef.current) {
+      clearInterval(healthRef.current);
+      healthRef.current = null;
+    }
+  }, []);
 
   /* ── cleanup ---------------------------------------------------- */
   /**
@@ -31,6 +53,7 @@ const useScreenShare = () => {
    * @param {string} nextStatus – status to set after cleanup (default 'idle')
    */
   const cleanup = useCallback((nextStatus = 'idle') => {
+    stopIntervals();
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => {
         track.onended = null; // remove handler BEFORE stop to avoid re-entry
@@ -43,8 +66,10 @@ const useScreenShare = () => {
     setResolution({ width: 0, height: 0 });
     setFrameRate(null);
     setError(null);
+    setElapsedSeconds(0);
+    setTrackReadyState(null);
     setStatus(nextStatus);
-  }, []);
+  }, [stopIntervals]);
 
   /* ── startScreenShare ------------------------------------------- */
   const startScreenShare = useCallback(async () => {
@@ -63,6 +88,7 @@ const useScreenShare = () => {
     }
 
     // ── Tear down any residual stream (no leaks) ────────────────────
+    stopIntervals();
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => {
         track.onended = null;
@@ -77,6 +103,8 @@ const useScreenShare = () => {
     setResolution({ width: 0, height: 0 });
     setFrameRate(null);
     setStream(null);
+    setElapsedSeconds(0);
+    setTrackReadyState(null);
 
     try {
       // ── Request the stream ──────────────────────────────────────
@@ -121,11 +149,25 @@ const useScreenShare = () => {
         settings.frameRate != null ? Math.round(settings.frameRate) : null
       );
 
+      // ── Feature: Session duration timer ─────────────────────────
+      setElapsedSeconds(0);
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(s => s + 1);
+      }, 1000);
+
+      // ── Feature: Track health poll ───────────────────────────────
+      setTrackReadyState(videoTrack.readyState);
+      healthRef.current = setInterval(() => {
+        // videoTrack is captured in closure — still valid reference
+        setTrackReadyState(videoTrack.readyState);
+      }, 1000);
+
       // ── Stream lifecycle — browser-native "Stop sharing" button ─
       videoTrack.onended = () => {
         // Transition from 'granted' → 'ended' only (guard against
         // double-firing if cleanup already ran).
         setStatus(prev => (prev === 'granted' ? 'ended' : prev));
+        stopIntervals();
 
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(t => {
@@ -138,6 +180,7 @@ const useScreenShare = () => {
         setDisplayType(null);
         setResolution({ width: 0, height: 0 });
         setFrameRate(null);
+        setTrackReadyState('ended');
       };
 
       streamRef.current = mediaStream;
@@ -208,11 +251,12 @@ const useScreenShare = () => {
           setError(err.message || 'An unexpected error occurred. Please try again.');
       }
     }
-  }, []);
+  }, [stopIntervals]);
 
   /* ── Unmount cleanup ──────────────────────────────────────────── */
   useEffect(() => {
     return () => {
+      stopIntervals();
       // Release tracks when component unmounts — no state update needed
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => {
@@ -222,7 +266,7 @@ const useScreenShare = () => {
         streamRef.current = null;
       }
     };
-  }, []);
+  }, [stopIntervals]);
 
   return {
     stream,
@@ -231,6 +275,8 @@ const useScreenShare = () => {
     displayType,
     resolution,
     frameRate,
+    elapsedSeconds,
+    trackReadyState,
     startScreenShare,
     cleanup,
   };
