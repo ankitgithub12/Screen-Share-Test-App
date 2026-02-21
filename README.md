@@ -4,6 +4,12 @@ A premium, glassmorphism-themed React (Vite) application that demonstrates and v
 
 ---
 
+## 🌍 Live Demo
+
+🔗 **[https://screen-share-test-app.onrender.com/](https://screen-share-test-app.onrender.com/)**
+
+---
+
 ## 🚀 Features
 
 - **Browser Capability Check** — Verifies `navigator.mediaDevices.getDisplayMedia` support before navigation; shows an unsupported-browser notice on incompatible browsers.
