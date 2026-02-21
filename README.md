@@ -116,16 +116,14 @@ Ensures media tracks are released if the user navigates away while a stream is a
 ## 📸 Screenshots
 
 ### Homepage
-![Homepage](docs/screenshots/home.png)
+![Homepage](screenshots/Home.png)
 
 *Static homepage with capability check — shows "Start Screen Test" button or unsupported-browser notice.*
 
 ### Screen Test — Active
-![Screen Test Active](docs/screenshots/test_active.png)
+![Screen Test Active](screenshots/test-active.png)
 
 *Active screen share: live preview, stream metadata (display type, resolution, frame rate), and Stop Sharing button.*
-
-> **Note:** Replace the placeholder images above with real screenshots after running the app locally (open the app, take a screenshot, and save to `docs/screenshots/`).
 
 ---
 
