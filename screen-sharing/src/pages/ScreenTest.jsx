@@ -158,7 +158,6 @@ const ScreenTest = () => {
           navigate('/');
         }
       }
-
     };
 
     document.addEventListener('keydown', onKeyDown);
@@ -182,11 +181,8 @@ const ScreenTest = () => {
     queueMicrotask(() => startScreenShare());
   };
 
-  /**
-   * In-app "Stop Sharing" button.
-   * Use 'ended' so Retry / Back buttons appear (not 'idle').
-   */
-  const handleStop = () => cleanup('ended');
+  /** In-app "Stop Sharing" button. */
+  const handleStop = () => { cleanup('ended'); };
 
   /** Navigate back — always clean up first */
   const handleBack = () => {
@@ -488,7 +484,7 @@ const ScreenTest = () => {
 
           </div>
 
-          {/* Keyboard shortcut hints */}
+          {/* Feature: Keyboard shortcut hints */}
           <div className="kbd-hints" aria-label="Keyboard shortcuts">
             <span className="kbd-hint">
               <kbd>S</kbd> Start / Retry
@@ -509,7 +505,7 @@ const ScreenTest = () => {
           </p>
 
         </div>
-      </main >
+      </main>
     </>
   );
 };

@@ -753,43 +753,56 @@ body {
 /* ── MIRROR WARNING BANNER ───────────────────────────────────── */
 /*
  * Shown inside the video-wrapper when displayType === 'Browser Tab'.
- * Warns the user about the hall-of-mirrors effect before they enter
- * fullscreen, and tells them to share a different source.
+ * Warns the user about the hall-of-mirrors effect in a clean,
+ * non-intrusive way.
  */
 .mirror-warning {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: var(--s4);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - var(--s8));
+  max-width: 480px;
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 14px;
-  background: rgba(251, 191, 36, 0.12);
-  border-top: 1px solid rgba(251, 191, 36, 0.3);
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s4);
+  background: rgba(10, 10, 18, 0.75);
   backdrop-filter: blur(8px);
-  font-size: 0.76rem;
-  color: var(--text-2);
-  line-height: 1.5;
-  animation: fadeSlideUp 0.3s ease both;
-  z-index: 5;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--r-md);
+  color: var(--text);
+  z-index: 50;
+  animation: slideUpFade 0.4s ease both;
 }
 
 .mirror-warning-icon {
-  font-size: 1rem;
+  font-size: 1.25rem;
   flex-shrink: 0;
-  line-height: 1.5;
+}
+
+.mirror-warning span {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-2);
 }
 
 .mirror-warning strong {
   color: var(--yellow);
-  font-weight: 700;
+  font-weight: 600;
+  margin-right: 4px;
 }
 
-.mirror-warning em {
-  color: var(--text);
-  font-style: normal;
-  font-weight: 600;
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 
@@ -935,12 +948,12 @@ body {
   transform: none !important;
 }
 
-/* ── FULLSCREEN BUTTON ────────────────────────────────────────── */
-.fs-btn {
+/* ── PAUSE PREVIEW BUTTON ─────────────────────────────────────── */
+.pause-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 11px;
+  gap: 6px;
+  padding: 5px 12px;
   font-family: var(--font);
   font-size: 0.75rem;
   font-weight: 600;
@@ -953,11 +966,21 @@ body {
   white-space: nowrap;
 }
 
-.fs-btn:hover {
-  background: rgba(79, 142, 247, 0.1);
-  border-color: rgba(79, 142, 247, 0.4);
-  color: var(--blue);
+.pause-btn:hover {
+  background: var(--glass-hover);
+  color: var(--text);
   transform: translateY(-1px);
+}
+
+.pause-btn--active {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.35);
+  color: var(--yellow);
+}
+
+.pause-btn--active:hover {
+  background: rgba(251, 191, 36, 0.25);
+  color: #fff;
 }
 
 /* ── TRACK HEALTH BADGE ───────────────────────────────────────── */

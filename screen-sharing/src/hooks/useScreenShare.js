@@ -251,12 +251,11 @@ const useScreenShare = () => {
           setError(err.message || 'An unexpected error occurred. Please try again.');
       }
     }
-  }, [stopIntervals]);
+  }, []);
 
   /* ── Unmount cleanup ──────────────────────────────────────────── */
   useEffect(() => {
     return () => {
-      stopIntervals();
       // Release tracks when component unmounts — no state update needed
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => {
@@ -266,7 +265,7 @@ const useScreenShare = () => {
         streamRef.current = null;
       }
     };
-  }, [stopIntervals]);
+  }, []);
 
   return {
     stream,
